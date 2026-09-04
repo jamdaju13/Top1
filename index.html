@@ -35,6 +35,7 @@
     position: relative;
     display: inline-block;
     padding: 10px;
+    z-index: 1;
   }
 
   .grid {
@@ -140,9 +141,22 @@
     margin-bottom: 24px;
     text-align: center;
   }
+
+  #top1RainCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+  }
 </style>
 </head>
 <body>
+
+  <canvas id="top1RainCanvas"></canvas>
 
   <div class="stage" id="page1" style="display: flex; flex-direction: column; align-items: center;">
     <div class="page1-title">Forda Top 1</div>
@@ -208,6 +222,88 @@
     </div>
 
   </div>
+
+  <script>
+    (function () {
+      var canvas = document.getElementById('top1RainCanvas');
+      var ctx = canvas.getContext('2d');
+      var animationId = null;
+      var drops = [];
+      var RAIN_TEXT = "TOP1";
+      var running = false;
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      function createDrop() {
+        var fontSize = 12 + Math.random() * 22;
+        return {
+          x: Math.random() * (canvas.width || window.innerWidth),
+          y: Math.random() * -(canvas.height || window.innerHeight),
+          speed: 0.6 + Math.random() * 2.4,
+          fontSize: fontSize,
+          opacity: 0.08 + Math.random() * 0.35
+        };
+      }
+
+      function initDrops() {
+        drops = [];
+        var count = Math.max(24, Math.floor((window.innerWidth || 800) / 40));
+        for (var i = 0; i < count; i++) {
+          drops.push(createDrop());
+        }
+      }
+
+      function draw() {
+        if (!running) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (var i = 0; i < drops.length; i++) {
+          var d = drops[i];
+          ctx.font = d.fontSize + "px 'Montserrat', Arial, Helvetica, sans-serif";
+          ctx.fillStyle = "rgba(160, 82, 45, " + d.opacity + ")";
+          ctx.fillText(RAIN_TEXT, d.x, d.y);
+          d.y += d.speed * (d.fontSize / 14);
+          if (d.y > canvas.height + d.fontSize) {
+            drops[i] = createDrop();
+            drops[i].y = -d.fontSize;
+          }
+        }
+        animationId = requestAnimationFrame(draw);
+      }
+
+      function startRain() {
+        if (running) return;
+        running = true;
+        resizeCanvas();
+        initDrops();
+        canvas.style.display = 'block';
+        animationId = requestAnimationFrame(draw);
+      }
+
+      function stopRain() {
+        running = false;
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+        canvas.style.display = 'none';
+      }
+
+      window.addEventListener('resize', function () {
+        if (running) {
+          resizeCanvas();
+          initDrops();
+        }
+      });
+
+      window.startTop1Rain = startRain;
+      window.stopTop1Rain = stopRain;
+
+      startRain();
+    })();
+  </script>
 
 </body>
 </html>
